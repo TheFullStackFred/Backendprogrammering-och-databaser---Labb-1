@@ -1,0 +1,415 @@
+-- code for creating database and insert data
+
+
+
+-- create sunDestinations database
+
+CREATE DATABASE sunDestinations;
+
+
+
+-- create currency table
+
+CREATE TABLE currency(
+
+   currencyId INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+   currencyName VARCHAR(50)
+
+);
+
+-- input data to currency table
+
+INSERT INTO currency (currencyName) VALUES('Maldivian rufiyaa'), ('Jamaican dollar'),
+
+('US dollar'),('Philippine peso'),('Euro'),('Baht');
+
+
+
+-- create country table
+
+CREATE TABLE country (
+
+   countryId INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+   countryName VARCHAR(50),
+
+   currencyId INT,
+
+   FOREIGN KEY (currencyId) REFERENCES currency(currencyId)
+
+);
+
+-- input data to country table
+
+INSERT INTO country (countryName,currencyId) VALUES('Maldives',1),('Jamaica',2),('USA',3),('Philippines',4),('Finland',5),('Ecuador',3),('Spain',5),('Thailand',6);
+
+
+
+-- create destination table
+
+CREATE TABLE destination (
+
+   destinationId INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+   destinationName VARCHAR(50),
+
+   countryId INT,
+
+   FOREIGN KEY (countryId) REFERENCES country(countryId)
+
+);
+
+-- insert data to destination table
+
+INSERT INTO destination(destinationName,countryId) VALUES('Baa Atoll',1),('Ocho Rios',2),('Miami',3),('El Nido',4),('Kalajoki',5),('Galapagos Islands',6),('Ibiza',7),('Koh Tao',8);
+
+
+
+-- create language table
+
+CREATE TABLE language (
+
+   languageId INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+   languageName VARCHAR(50)
+
+);
+
+-- insert data to language table
+
+INSERT INTO language (languageName) VALUES('Dhivehi'),('English'),('Tagalog'),('Finnish'),('Spanish'),('Thai'),('Bisaya'),('Swedish');
+
+
+
+-- create countryLanguage table
+
+CREATE TABLE countryLanguage (
+
+   countryLanguageId INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+   countryLanguageCId INT,
+
+   countryLanguageLId INT,
+
+   FOREIGN KEY (countryLanguageCId) REFERENCES country(countryId),
+
+   FOREIGN KEY (countryLanguageLId) REFERENCES language(languageId)
+
+);
+
+-- insert data to countryLanguage table
+
+INSERT INTO countryLanguage (countryLanguageCId, countryLanguageLId)  VALUES (1,1),(2,2),(3,2),(4,3),(5,4),(6,5),(4,7),(5,8);
+
+
+
+-- code for SQL questions
+
+
+
+-- creating unique index for column currencyName in table currency
+
+CREATE UNIQUE INDEX currencyindex
+
+ON currency(currencyName);
+
+
+
+-- select currency baht
+
+SELECT currencyName FROM currency WHERE currencyName = 'Baht';
+
+
+
+-- try to create baht again but don't work because it has a unique index (Duplicate entry 'Baht' for key 'currency.currencyindex')
+
+INSERT INTO currency(currencyName) VALUES('Baht');
+
+
+
+-- try to delete Euro from table currency but it don't work because currency is FK-key in country. (Cannot delete or update a parent row: a foreign key constraint fails (`sundestinations`.`country`, CONSTRAINT `country_ibfk_1` FOREIGN KEY (`currencyId`) REFERENCES `currency` (`currencyId`)))
+
+DELETE FROM currency WHERE currencyName ='Euro';
+
+
+
+-- showing columns---> destinationName, countryName, languageName, currencyName with inner join
+
+SELECT destination.destinationName,country.countryName,language.languageName,currency.currencyName
+
+FROM destination
+
+INNER JOIN country ON destination.countryId = country.countryId
+
+INNER JOIN currency ON country.currencyId = currency.currencyId
+
+INNER JOIN countryLanguage ON country.countryId = countryLanguage.countryLanguageCId
+
+INNER JOIN language ON countryLanguage.countryLanguageLId = language.languageId ORDER BY destinationName;
+
+
+
+-- showing columns---> destinationId & countryId with inner join
+
+SELECT destination.destinationId,country.countryId
+
+FROM destination
+
+INNER JOIN country ON destination.countryId = country.countryId;
+
+
+
+-- insert Singapore dollar to table currency and column currencyName but spell it wrong so i must fix it with a update
+
+INSERT INTO currency (currencyName) VALUES ('Singapore dolar');
+
+
+
+-- checking if there is a currencyName with value Singapore dolar
+
+SELECT currencyName FROM currency WHERE currencyName='Singapore dolar';
+
+
+
+-- update Singapore dolar to Singapore dollar
+
+UPDATE currency SET currencyName='Singapore dollar' WHERE currencyName ='Singapore dolar';
+
+
+
+-- checking if the update work
+
+SELECT currencyName FROM currency WHERE currencyName='Singapore dollar';
+
+
+
+-- delete Singapore dollar
+
+DELETE FROM currency WHERE currencyName ='Singapore dollar';
+
+
+
+-- checking if the delete work
+
+SELECT currencyName FROM currency WHERE currencyName='Singapore dollar';
+
+
+
+-- creating table for capitalCity and i set the varchar limit to 187 because the longest name in the world of a capital city is 168 letters long but with the space between every word its 187, Bangkoks full name === (Krung Thep Mahanakhon Amon Rattanakosin Mahinthara Ayuthaya Mahadilok Phop Noppharat Ratchathani Burirom Udomratchaniwet Mahasathan Amon Piman Awatan Sathit Sakkathattiya Witsanukam Prasit)
+
+CREATE TABLE capitalCity(
+
+   capitalCityId INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+   capitalCityName VARCHAR(187)
+
+);
+
+-- adding column capitalCityAge
+
+ALTER TABLE capitalCity
+
+ADD capitalCityAge INT ;
+
+
+
+-- deleting table capitalCity
+
+DROP TABLE capitalCity;
+
+
+
+-- checking how many countrys there is in table country with function count
+
+SELECT COUNT(countryName) AS totalCountrys FROM country;
+
+
+
+-- create view that show countrys less than 6 letters long
+
+CREATE VIEW countryNamesLessThanSixLetters AS
+
+SELECT countryName
+
+FROM country
+
+WHERE length(countryName) <6;
+
+
+
+-- watching the view
+
+SELECT * FROM countryNamesLessThanSixLetters;
+
+
+
+-- creating table population
+
+CREATE TABLE population(
+
+   population BIGINT
+
+);
+
+-- insert data to population table
+
+INSERT INTO population VALUES(9223372036854775807);
+
+
+
+-- prevent autocommit
+
+SET AUTOCOMMIT = 0;
+
+
+
+-- start transaction
+
+START TRANSACTION;
+
+
+
+-- update population with new value
+
+UPDATE population
+
+SET population = population - 9223372036854775806
+
+WHERE population = 9223372036854775807;
+
+
+
+-- doing an commit to save the changes permanently
+
+COMMIT;
+
+
+
+-- checking the new value
+
+SELECT * FROM population;
+
+
+
+-- deleting table population
+
+DROP TABLE population;
+
+
+
+-- doing another transaction but without commit and with rollback
+
+-- creating table population
+
+CREATE TABLE population(
+
+   population BIGINT
+
+);
+
+-- insert data to population table
+
+INSERT INTO population VALUES(9223372036854775807);
+
+
+
+-- prevent autocommit
+
+SET AUTOCOMMIT = 0;
+
+
+
+-- start transaction
+
+START TRANSACTION;
+
+
+
+-- update population with new value
+
+UPDATE population
+
+SET population = population - 9223372036854775806
+
+WHERE population = 9223372036854775807;
+
+
+
+-- checking the new value
+
+SELECT * FROM population;
+
+
+
+-- travel back in time to the first value
+
+ROLLBACK;
+
+
+
+-- checking if its the old value
+
+SELECT * FROM population;
+
+
+
+-- deleting table population
+
+DROP TABLE population;
+
+
+
+-- create stored procedure (list all countrys)
+
+DELIMITER //
+
+CREATE PROCEDURE GetAllCountrys()
+
+BEGIN
+
+SELECT countryName FROM country;
+
+END //
+
+
+
+-- run the GetAllCountrys stored procedure
+
+CALL GetAllCountrys();
+
+
+
+-- delete an stored procedure
+
+DROP PROCEDURE IF EXISTS GetAllCountrys;
+
+
+
+-- create stored procedure (get all languages for one country === Finland)
+
+DELIMITER //
+
+CREATE PROCEDURE GetFinlandLanguages(IN inLanguage VARCHAR(50))
+
+BEGIN
+
+SELECT country.countryName,language.languageName
+
+FROM country INNER JOIN countryLanguage ON country.countryId = countryLanguage.countryLanguageCId
+
+INNER JOIN language ON countryLanguage.countryLanguageLId = language.languageId WHERE country.countryName = inLanguage;
+
+END //
+
+
+
+-- run the GetFinlandLanguages stored procedure
+
+CALL GetFinlandLanguages('Finland');
+
+
+
+-- delete the GetFinlandLanguages stored procedure
+
+DROP PROCEDURE IF EXISTS GetFinlandLanguages;
